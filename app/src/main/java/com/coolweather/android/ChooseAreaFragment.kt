@@ -1,6 +1,7 @@
 package com.coolweather.android
 
 import android.app.ProgressDialog
+import android.content.Intent
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.view.LayoutInflater
@@ -20,6 +21,7 @@ import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Response
 import org.jetbrains.anko.sdk25.coroutines.onClick
+import org.jetbrains.anko.support.v4.startActivity
 import org.jetbrains.anko.support.v4.toast
 import org.litepal.LitePal
 import java.io.IOException
@@ -102,6 +104,13 @@ class ChooseAreaFragment : Fragment() {
                 LEVEL_CITY -> {
                     selectedCity = cityList[position]
                     queryCounties()
+                }
+                LEVEL_COUNTY -> {
+                    val weatherId = countyList[position].weatherId
+                    val intent = Intent(activity, WeatherActivity::class.java)
+                    intent.putExtra("weather_id", weatherId)
+                    startActivity(intent)
+                    activity?.finish()
                 }
             }
         }

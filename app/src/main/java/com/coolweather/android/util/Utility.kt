@@ -1,12 +1,13 @@
 package com.coolweather.android.util
 
 import android.text.TextUtils
-import android.view.TextureView
 import com.coolweather.android.db.City
 import com.coolweather.android.db.County
 import com.coolweather.android.db.Province
+import com.coolweather.android.gson.Weather
+import com.google.gson.Gson
 import org.json.JSONArray
-import org.w3c.dom.Text
+import org.json.JSONObject
 
 object Utility {
     /**
@@ -75,5 +76,20 @@ object Utility {
             }
         }
         return false
+    }
+
+    /**
+     * 将返回的JSON数据解析成Weather实体类
+     */
+    fun handleWeatherResponse(response: String): Weather? {
+        try {
+            val jsonObject = JSONObject(response)
+            val jsonArray = jsonObject.getJSONArray("HeWeather")
+            var weatherContent = jsonArray.getJSONObject(0).toString()
+            return Gson().fromJson(weatherContent, Weather::class.java)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return null
     }
 }
