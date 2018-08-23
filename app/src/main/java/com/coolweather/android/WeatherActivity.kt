@@ -6,9 +6,11 @@ import android.os.Build
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.preference.PreferenceManager
+import android.support.v4.view.GravityCompat
 import android.view.LayoutInflater
 import android.view.View
 import com.bumptech.glide.Glide
+import com.coolweather.android.R.layout.forecast
 import com.coolweather.android.gson.Weather
 import com.coolweather.android.util.HttpUtil
 import com.coolweather.android.util.Utility
@@ -23,10 +25,13 @@ import kotlinx.android.synthetic.main.title.*
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Response
+import org.jetbrains.anko.sdk25.coroutines.onClick
+import org.jetbrains.anko.support.v4.onRefresh
 import org.jetbrains.anko.toast
 import java.io.IOException
 
 class WeatherActivity : AppCompatActivity() {
+    private var mweatherId: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,17 +42,32 @@ class WeatherActivity : AppCompatActivity() {
         }
         setContentView(R.layout.activity_weather)
 
+        swipe_refresh.setColorSchemeResources(R.color.colorPrimary)
+        nav_button.onClick {
+            drawer_layout.openDrawer(GravityCompat.START)
+        }
+
         var prefs = PreferenceManager.getDefaultSharedPreferences(this)
         var weatherString = prefs.getString("weather", null)
         if (weatherString != null) {
             //有缓存时直接解析天气数据
             val weather = Utility.handleWeatherResponse(weatherString)
-            weather?.let { showWeatherInfo(weather) }
+            weather?.let {
+                mweatherId = it.basic?.weatherId
+                showWeatherInfo(it)
+            }
         } else {
             //无缓存时去服务器查询天气数据
-            val weatherId = intent.getStringExtra("weather_id")
+            mweatherId = intent.getStringExtra("weather_id")
             weather_layout.visibility = View.INVISIBLE
-            requestWeather(weatherId)
+            requestWeather(mweatherId)
+        }
+
+//        swipe_refresh.setOnRefreshListener {
+//            requestWeather(weatherId)
+//        }
+        swipe_refresh.onRefresh {
+            requestWeather(mweatherId)
         }
 
         var bingPic = prefs.getString("bing_pic", null)
@@ -61,7 +81,7 @@ class WeatherActivity : AppCompatActivity() {
     /**
      * 根据天气id请求城市天气信息
      */
-    fun requestWeather(weatherId: String) {
+    fun requestWeather(weatherId: String?) {
         val weatherUrl =
             "http://guolin.tech/api/weather?cityid=${weatherId}&key=88ec82763fb04d30b8361004e3b98636"
         HttpUtil.sendOkHttpRequest(weatherUrl, object : Callback {
@@ -69,6 +89,7 @@ class WeatherActivity : AppCompatActivity() {
                 e.printStackTrace()
                 runOnUiThread {
                     toast("获取天气信息失败")
+                    swipe_refresh.isRefreshing = false
                 }
             }
 
@@ -82,10 +103,12 @@ class WeatherActivity : AppCompatActivity() {
                                 .edit()
                         editor.putString("weather", responseText)
                         editor.apply()
+                        mweatherId = weatherId
                         showWeatherInfo(weather)
                     } else {
                         toast("获取天气信息失败")
                     }
+                    swipe_refresh.isRefreshing = false
                 }
             }
 
@@ -135,8 +158,8 @@ class WeatherActivity : AppCompatActivity() {
                     .inflate(R.layout.forecast_item, forecast_layout, false)
                 view.date_text.text = forecast.date
                 view.info_text.text = forecast.more?.info
-                view.max_text.text = forecast.temperature?.max
-                view.min_text.text = forecast.temperature?.min
+                view.max_text.text = (forecast.temperature?.max ?: "") + "℃"
+                view.min_text.text = (forecast.temperature?.min ?: "") + "℃"
                 forecast_layout.addView(view)
             }
         }

@@ -15,13 +15,16 @@ import com.coolweather.android.db.County
 import com.coolweather.android.db.Province
 import com.coolweather.android.util.HttpUtil
 import com.coolweather.android.util.Utility
+import kotlinx.android.synthetic.main.activity_weather.*
 import kotlinx.android.synthetic.main.choose_area.*
 import kotlinx.android.synthetic.main.choose_area.view.*
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Response
 import org.jetbrains.anko.sdk25.coroutines.onClick
+import org.jetbrains.anko.support.v4.drawerLayout
 import org.jetbrains.anko.support.v4.startActivity
+import org.jetbrains.anko.support.v4.swipeRefreshLayout
 import org.jetbrains.anko.support.v4.toast
 import org.litepal.LitePal
 import java.io.IOException
@@ -107,10 +110,21 @@ class ChooseAreaFragment : Fragment() {
                 }
                 LEVEL_COUNTY -> {
                     val weatherId = countyList[position].weatherId
-                    val intent = Intent(activity, WeatherActivity::class.java)
-                    intent.putExtra("weather_id", weatherId)
-                    startActivity(intent)
-                    activity?.finish()
+                    when (activity) {
+                        is MainActivity -> {
+                            val intent = Intent(activity, WeatherActivity::class.java)
+                            intent.putExtra("weather_id", weatherId)
+                            startActivity(intent)
+                            activity?.finish()
+                        }
+                        is WeatherActivity -> {
+                            val thisActivity = activity as WeatherActivity
+                            thisActivity.drawer_layout.closeDrawers()
+                            thisActivity.swipe_refresh.isRefreshing = true
+                            thisActivity.requestWeather(weatherId)
+                        }
+                    }
+
                 }
             }
         }
