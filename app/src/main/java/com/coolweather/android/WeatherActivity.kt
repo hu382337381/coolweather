@@ -12,6 +12,7 @@ import android.view.View
 import com.bumptech.glide.Glide
 import com.coolweather.android.R.layout.forecast
 import com.coolweather.android.gson.Weather
+import com.coolweather.android.service.AutoUpdateService
 import com.coolweather.android.util.HttpUtil
 import com.coolweather.android.util.Utility
 import kotlinx.android.synthetic.main.activity_weather.*
@@ -26,6 +27,7 @@ import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Response
 import org.jetbrains.anko.sdk25.coroutines.onClick
+import org.jetbrains.anko.startService
 import org.jetbrains.anko.support.v4.onRefresh
 import org.jetbrains.anko.toast
 import java.io.IOException
@@ -174,5 +176,6 @@ class WeatherActivity : AppCompatActivity() {
         car_wash_text.text = carWash
         sport_text.text = sport
         weather_layout.visibility = View.VISIBLE
+        startService<AutoUpdateService>()
     }
 }
